@@ -10,7 +10,11 @@ def steffensen(f, x_0, tol=0.01, max_iter=20, debug=False):
     x_i = x_0
     for i in range(max_iter):
         # Guardo g(x_i) y f(x_i) para no calcularlos de nuevo
-        g_x_i = g_local(x_i)
+        try:
+            g_x_i = g_local(x_i)
+        except:
+            print("TERMINATED: Algorithm termination")
+            return x_i
         f_x_i = f(x_i)
         if g_x_i == 0:
             if debug:
@@ -42,6 +46,6 @@ def steffensen(f, x_0, tol=0.01, max_iter=20, debug=False):
 
 if __name__=='__main__':
     f = lambda x: x**10-10*x+4
-    x_0 = -1
-    print(steffensen(f, x_0, 0, 20, debug=True))
+    x_0 = 0
+    print(steffensen(f, x_0, 0, 200, debug=True))
 
