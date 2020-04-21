@@ -39,62 +39,28 @@ int main(){
 		}
 	}
 	rcv caca(rows, columns, values, make_pair(max_row+1, max_col+1));
-	caca.print();
-	caca.print_matrix();
-	
+
 	//Find largest value in col and swap to make pivot
 	rcv id = caca.create_identity();
 
-	int r = caca.pivot_swap(0);
-	id.swap_rows(0, r);
 	
+	int r = caca.pivot_swap(0);
+	id.swap_rows(0, r);	
 	
 	double r2 = caca.reduce(0);
 	id.reduce(0, r2);
-
 	
-	vector<double> coefs = caca.make_column_0(0);	
+	vector<pair<int, double> > coefs = caca.make_column_0(0, false);	
 	id.make_column_0(0, coefs);
 
-
 	r2 = caca.reduce(1);
-	id.reduce(1, r2);
+	id.reduce(1, r2);		
 
-	caca.transpose();
-	id.transpose();
-
-	
-	//TODO BIEN ----
-	 
 	//SECOND STEP
-	r = caca.pivot_swap(0);
-	id.swap_rows(0, r);
 
-	r2 = caca.reduce(0);
-	id.reduce(0, r2);
-
-	cerr<<"después de reduce"<<endl;
-	
-	caca.print_matrix();
-	id.print();
-	id.print_matrix();
-
-
-	coefs = caca.make_column_0(0);
-	id.make_column_0(0, coefs);
-
-	cerr<<"después de make column 0"<<endl;
-	
-	caca.print_matrix();
-	id.print();
-	id.print_matrix();
-
-	r2 = caca.reduce(1);
-	id.reduce(1, r2);
-
+	coefs = caca.make_column_0(1, true);
+	id.make_column_0(1, coefs);	
 
 	caca.print_matrix();
 	id.print_matrix();
-
-
 }

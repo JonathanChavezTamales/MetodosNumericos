@@ -24,9 +24,8 @@ class rcv{
 		int pivot_swap(int row_a);
 		double reduce(int step);
 		void reduce(int step, double current_val);
-		vector<double> make_column_0(int col);
-		void make_column_0(int col, vector<double> &coef);
-		void transpose();
+		vector<pair<int, double> > make_column_0(int col, bool goes_up);
+		void make_column_0(int col, vector<pair<int, double> > &coef);
 		void invert();
 		rcv create_identity();
 		void print();

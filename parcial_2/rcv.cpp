@@ -6,6 +6,8 @@
 using namespace std;
 
 rcv::rcv(vector<int> &r, vector<int> &c, vector<double> &v, pair<int, int> dim){
+	//Constructor, receives a vector of rows, columns and values, also a pair with dimensions (n, m).
+
 	rows = move(r);
 	columns = move(c);
 	values = move(v);
@@ -13,53 +15,19 @@ rcv::rcv(vector<int> &r, vector<int> &c, vector<double> &v, pair<int, int> dim){
 }
 
 void rcv::swap_rows(int row_a, int row_b){
+	//Swaps elements from row a and row b
 
 	if(row_a >= dimension.first || row_b >= dimension.first || row_a < 0 || row_b < 0) return;
 
-	//Store the pair(column, value) for each row;
-	vector<pair<int, double> > a;
-	vector<pair<int, double> > b;
-	
-	auto row_it = rows.begin();
-	auto col_it = columns.begin();
-	auto val_it = values.begin();
-
-	while(row_it != rows.end()){
-		if(*row_it == row_a || *row_it == row_b){
-			pair<int, double> element = make_pair(*col_it, *val_it);
-			if(*row_it == row_a){
-				a.push_back(element);
-			}
-			else{
-				b.push_back(element);
-			}
-			row_it = rows.erase(row_it);
-			col_it = columns.erase(col_it);
-			val_it = values.erase(val_it);
-		}
-		else{
-			row_it++;
-			col_it++;
-			val_it++;
-		}
+	for(int i=0; i<rows.size(); i++){
+		if(rows[i] == row_a) rows[i] = row_b;
+		else if(rows[i] == row_b) rows[i] = row_a;
 	}
-
-	//Swap elements
-	for(int i=0; i<a.size(); i++){
-		rows.push_back(row_b);
-		columns.push_back(a[i].first);
-		values.push_back(a[i].second);
-	}
-
-	for(int i=0; i<b.size(); i++){
-		rows.push_back(row_a);
-		columns.push_back(b[i].first);
-		values.push_back(b[i].second);
-	}
-
 }
 
 void rcv::multiply(double scalar, int row_a){
+	//Multiplies a row by a scalar
+
 	for(int i=0; i<rows.size(); i++){
 		if(rows[i] == row_a){
 			values[i] *= scalar;
@@ -68,6 +36,8 @@ void rcv::multiply(double scalar, int row_a){
 }
 
 void rcv::add(int row_a, int row_b, double scalar){
+	//Adds into row a row b multiplied by scalar (row_a += scalar*row_b) 
+
 	if(row_a == row_b) return;
 
 	//Stores the pair (column, value) in its own bucket (row)
@@ -112,6 +82,8 @@ void rcv::add(int row_a, int row_b, double scalar){
 }
 
 int rcv::pivot_swap(int step){
+	//Finds the largest value in column under that row, this will be the pivot, now swap the current row and the new row.
+
 	//Returns row swapped
 
 	double max_val = INT_MIN;
@@ -134,10 +106,12 @@ int rcv::pivot_swap(int step){
 }
 
 double rcv::reduce(int step){
-	//Returns pivot which divides all row
+	//Find all values in the same row, then multiplies them by 1/pivot (current_val)
+	//Returns pivot which divides all rows, then later used by void rcv::reduce
 
 	//Find the current value
 	double current_val = INT_MIN;
+
 	//Find indexes of all values in the same row, then update.
 	vector<int> remaining;
 
@@ -168,7 +142,8 @@ double rcv::reduce(int step){
 
 
 void rcv::reduce(int step, double current_val){
-	//Find indexes of all values in the same row, then update.
+	//Find all values in the same row, then multiplies them by 1/pivot (current_val)
+	
 	vector<int> remaining;
 	if(current_val < 1.0000001 && current_val > 0.9999999){
 		//If pivot is 1, don't do anything.
@@ -192,40 +167,53 @@ void rcv::reduce(int step, double current_val){
 	}
 }
 
-vector<double> rcv::make_column_0(int col){
+vector<pair<int, double> > rcv::make_column_0(int col, bool goes_up){
+	//Makes 0 all the elements under the pivot (by adding linear combinations to the vector)
 	//Returns the coefficients used to multiply in the identity
+	vector<pair<int, double> > used;
 	vector<double> values_temp(values);
 	vector<int> rows_temp(rows);
 	vector<int> cols_temp(columns);
+	this->print();
 	for(int i=0; i<rows_temp.size(); i++){
-		if(cols_temp[i] == col && rows_temp[i] > col){
-			add(rows_temp[i], col, values_temp[i]*-1);		
+		if(goes_up){
+			if(cols_temp[i] == col && rows_temp[i] < col){
+				add(rows_temp[i], col, values_temp[i]*-1);
+				used.push_back(make_pair(rows_temp[i], values_temp[i]));
+			}
+		}
+		else{
+			if(cols_temp[i] == col && rows_temp[i] > col){
+				add(rows_temp[i], col, values_temp[i]*-1);
+				used.push_back(make_pair(rows_temp[i], values_temp[i]));
+			}
 		}
 	}	
-	return values_temp;
+	return used;
 }
 
-void rcv::make_column_0(int col, vector<double> &coef){
-	//Used only for identity, multiplies by passed coefficients instead of own
+void rcv::make_column_0(int col, vector<pair<int, double> > &coef){
+	//Makes 0 all the elements under the pivot (by adding linear combinations to the vector)
+	//Used only for identity, multiplies by passed coefficients instead of own	
+
 	vector<int> rows_temp(rows);
 	vector<int> cols_temp(columns);
-	for(int i=0; i<rows_temp.size(); i++){
-		if(cols_temp[i] == col && rows_temp[i] > col){
-			cerr<<"adding to row"<<rows_temp[i]<<" row"<<col<<" * -"<<coef[i]<<endl;
-			add(rows_temp[i], col, coef[i]*-1);		
-		}
+
+	for(int i=0; i<coef.size(); i++){
+		add(coef[i].first, col, coef[i].second*-1);
 	}	
 }
 
-void rcv::transpose(){
-	rows.swap(columns);
-}
+
 
 void rcv::invert(){
+	//Calculates the inverse of the matrix
 	cout<<"caca";
 }
 
 rcv rcv::create_identity(){
+	//Returns an rcv representing an identity matrix with the dimensions of the original matrix
+
 	if(dimension.first != dimension.second){
 		throw "no se puede hacer identidad";
 	}
@@ -243,6 +231,8 @@ rcv rcv::create_identity(){
 }
 
 void rcv::print(){
+	//Prints the matrix in rcv form
+
 	cout<<"ROW\tCOL\tVAL"<<endl;
 	for(int i=0; i<rows.size(); i++){
 		cout<<rows[i]<<"\t"<<columns[i]<<"\t"<<values[i]<<endl;
@@ -250,12 +240,12 @@ void rcv::print(){
 }
 
 void rcv::print_matrix(){
+	//Prints the matrix in matrix form
+
 	vector<vector<double> > M(dimension.first, vector<double>(dimension.second));
-	cerr<<"a";
 	for(int i=0; i<rows.size(); i++){
 		M[rows[i]][columns[i]] = values[i];
 	}
-	cerr<<"b";
 	cout<<"{";
 	for(int i=0; i<dimension.first; i++){
 		if(i != 0) cout<<" ";
@@ -270,5 +260,6 @@ void rcv::print_matrix(){
 }
 
 pair<int, int> rcv::size(){
+	//Returns a pair with the calculated dimension of the matrix
 	return dimension;
 }
