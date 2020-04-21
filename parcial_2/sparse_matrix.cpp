@@ -8,6 +8,7 @@ using namespace std;
 int main(){
 	int matrix_size;
 	cin>>matrix_size;
+
 	
 	vector<int> rows(matrix_size);
 	vector<int> columns(matrix_size);
@@ -38,29 +39,12 @@ int main(){
 			return -2;
 		}
 	}
+	
 	rcv caca(rows, columns, values, make_pair(max_row+1, max_col+1));
+	rcv inverse = caca.inverse();
 
-	//Find largest value in col and swap to make pivot
-	rcv id = caca.create_identity();
-
-	
-	int r = caca.pivot_swap(0);
-	id.swap_rows(0, r);	
-	
-	double r2 = caca.reduce(0);
-	id.reduce(0, r2);
-	
-	vector<pair<int, double> > coefs = caca.make_column_0(0, false);	
-	id.make_column_0(0, coefs);
-
-	r2 = caca.reduce(1);
-	id.reduce(1, r2);		
-
-	//SECOND STEP
-
-	coefs = caca.make_column_0(1, true);
-	id.make_column_0(1, coefs);	
-
+	cout<<"Matriz original: "<<endl;
 	caca.print_matrix();
-	id.print_matrix();
+	cout<<endl<<"Inversa: "<<endl;
+	inverse.print_matrix();
 }

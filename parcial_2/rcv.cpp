@@ -90,15 +90,20 @@ int rcv::pivot_swap(int step){
 	int max_row = -1;
 	double current_val = INT_MIN;
 	for(int i=0; i<rows.size(); i++){
-		if(columns[i] == step && columns[i] == rows[i] && values[i] > current_val){
+		if(columns[i] == step && columns[i] == rows[i]){
 			current_val = values[i];
+			break;
 		}
-		if(columns[i] == step && values[i] > max_val){
+	}
+
+	for(int i=0; i<rows.size(); i++){	
+		if(columns[i] == step && values[i] > max_val && rows[i] > step){
 			max_val = values[i];
 			max_row = rows[i];
 		}
 	}	
-	if(max_row != step){
+	
+	if(max_row != -1){
 		this->swap_rows(step, max_row);
 		return max_row;
 	}
@@ -111,7 +116,6 @@ double rcv::reduce(int step){
 
 	//Find the current value
 	double current_val = INT_MIN;
-
 	//Find indexes of all values in the same row, then update.
 	vector<int> remaining;
 
@@ -174,7 +178,6 @@ vector<pair<int, double> > rcv::make_column_0(int col, bool goes_up){
 	vector<double> values_temp(values);
 	vector<int> rows_temp(rows);
 	vector<int> cols_temp(columns);
-	this->print();
 	for(int i=0; i<rows_temp.size(); i++){
 		if(goes_up){
 			if(cols_temp[i] == col && rows_temp[i] < col){
@@ -206,15 +209,65 @@ void rcv::make_column_0(int col, vector<pair<int, double> > &coef){
 
 
 
-void rcv::invert(){
-	//Calculates the inverse of the matrix
-	cout<<"caca";
+rcv rcv::inverse(){
+	//Returns the rcv of the inverse of the matrix
+	
+	vector<int> rows_temp(this->rows);
+	vector<int> cols_temp(this->columns);
+	vector<double> vals_temp(this->values);
+
+	rcv id = this->create_identity();
+
+	if(dimension.first != dimension.second){
+		cerr<<"no se puede inversa, dims no iguales";
+		throw "inv";
+	}
+
+
+	for(int i=0; i<dimension.first; i++){
+		this->print_matrix();
+
+		cerr<<" ITER "<< i<<endl;
+		int r = this->pivot_swap(i);
+		id.swap_rows(i, r);
+			
+		cerr<<"after swap"<<endl;
+		this->print_matrix();
+
+		double r2 = this->reduce(i);
+		id.reduce(i, r2);
+
+		cerr<<"after reduce"<<endl;
+		this->print_matrix();
+
+		vector<pair<int, double> > coefs = this->make_column_0(i, false);	
+		id.make_column_0(i, coefs);
+		cerr<<"after trim"<<endl;
+		this->print_matrix();
+	}
+
+	this->print_matrix();
+
+	for(int i=dimension.first-1; i>=1; i--){
+		vector<pair<int, double> > coefs = this->make_column_0(i, true);
+		id.make_column_0(i, coefs);
+	}
+
+	this->print_matrix();
+
+	this->rows = rows_temp;
+	this->columns = cols_temp;
+	this->values = vals_temp;
+
+	return id;
 }
 
 rcv rcv::create_identity(){
 	//Returns an rcv representing an identity matrix with the dimensions of the original matrix
 
 	if(dimension.first != dimension.second){
+		cerr<<"identity cant"<<endl;
+		cerr<<dimension.first<<" x "<<dimension.second<<endl;
 		throw "no se puede hacer identidad";
 	}
 	else{	

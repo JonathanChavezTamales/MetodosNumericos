@@ -26,7 +26,7 @@ class rcv{
 		void reduce(int step, double current_val);
 		vector<pair<int, double> > make_column_0(int col, bool goes_up);
 		void make_column_0(int col, vector<pair<int, double> > &coef);
-		void invert();
+		rcv inverse();
 		rcv create_identity();
 		void print();
 		void print_matrix();
