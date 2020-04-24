@@ -225,35 +225,25 @@ rcv rcv::inverse(){
 
 
 	for(int i=0; i<dimension.first; i++){
-		this->print_matrix();
 
-		cerr<<" ITER "<< i<<endl;
 		int r = this->pivot_swap(i);
 		id.swap_rows(i, r);
 			
-		cerr<<"after swap"<<endl;
-		this->print_matrix();
 
 		double r2 = this->reduce(i);
 		id.reduce(i, r2);
 
-		cerr<<"after reduce"<<endl;
-		this->print_matrix();
 
 		vector<pair<int, double> > coefs = this->make_column_0(i, false);	
 		id.make_column_0(i, coefs);
-		cerr<<"after trim"<<endl;
-		this->print_matrix();
 	}
 
-	this->print_matrix();
 
 	for(int i=dimension.first-1; i>=1; i--){
 		vector<pair<int, double> > coefs = this->make_column_0(i, true);
 		id.make_column_0(i, coefs);
 	}
 
-	this->print_matrix();
 
 	this->rows = rows_temp;
 	this->columns = cols_temp;
